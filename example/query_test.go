@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"testing"
 
@@ -32,11 +33,13 @@ func TestQuery(t *testing.T) {
 
 	db.AutoMigrate(&User{})
 
-	ctx := cc.New(context.Background()).WithKey("keys.user:106").CC()
+	ctx := cc.New(context.Background()).WithKey("keys.user:1").WithTags("tags.user:1", "tags.user.all").CC()
 	info := &User{}
-	err = db.WithContext(ctx).First(&info, 1000).Error
+	err = db.WithContext(ctx).First(&info, 1).Error
 	if err != nil {
-		panic(err)
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			panic(err)
+		}
 	}
 	slog.Debug("query", slog.Any("info", info))
 }

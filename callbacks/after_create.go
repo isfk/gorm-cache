@@ -14,11 +14,6 @@ import (
 func AfterCreate(c *cache.Cache) func(tx *gorm.DB) {
 	log := slog.With("callback", "after_create")
 	return func(tx *gorm.DB) {
-		if tx.Statement.Dest == nil {
-			return
-		}
-
-		// 创建之后, 得到了数据, 直接生成缓存更好
 		ctx := tx.Statement.Context
 
 		key := ""

@@ -5,7 +5,7 @@ import "context"
 type (
 	GormCacheKeyCtx    struct{}
 	GormCacheTagsCtx   struct{}
-	GormCacheStructCtx struct{}
+	GormCacheValuesCtx struct{}
 )
 
 type CacheContext struct {

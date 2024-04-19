@@ -41,7 +41,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	slog.Debug("create", slog.Any("info", info))
+	slog.Debug("create", "info", info)
 
 	id := info.ID
 	ctx = cc.New(context.Background()).WithKey(fmt.Sprintf("keys.user:%d", id)).WithTags(fmt.Sprintf("tags.user:%d", id), "tags.user.all").CC()
@@ -50,13 +50,20 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	slog.Debug("query", slog.Any("info", info))
+	slog.Debug("query", "info", info)
 
-	// info.Username = fmt.Sprintf("user-%d", id)
-	// ctx = cc.New(context.Background()).WithKey(fmt.Sprintf("keys.user:%d", id)).WithTags(fmt.Sprintf("tags.user:%d", id), "tags.user.all").CC()
-	// err = db.WithContext(ctx).Save(&info).Error
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// slog.Debug("update", slog.Any("info", info))
+	info.Username = fmt.Sprintf("user-%d", id)
+	ctx = cc.New(context.Background()).WithKey(fmt.Sprintf("keys.user:%d", id)).WithTags(fmt.Sprintf("tags.user:%d", id), "tags.user.all").CC()
+	err = db.WithContext(ctx).Save(&info).Error
+	if err != nil {
+		panic(err)
+	}
+	slog.Debug("update", "info", info)
+
+	ctx = cc.New(context.Background()).WithKey("keys.user:1").WithTags("tags.user:1", "tags.user.all").CC()
+	err = db.WithContext(ctx).Delete(&User{}, 1).Error
+	if err != nil {
+		panic(err)
+	}
+	slog.Debug("delete")
 }

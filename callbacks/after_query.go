@@ -1,24 +1,100 @@
 package callbacks
 
 import (
+	"encoding/json"
+	"fmt"
 	"log/slog"
+	"strings"
 
+	"github.com/isfk/go-cache/v3"
 	cacheContext "github.com/isfk/gorm-cache/context"
 	"gorm.io/gorm"
 )
 
-func AfterQuery() func(tx *gorm.DB) {
+func AfterQuery(c *cache.Cache) func(tx *gorm.DB) {
 	log := slog.With("callback", "after_query")
 	return func(tx *gorm.DB) {
-		if tx.Error != nil {
+		ctx := tx.Statement.Context
+		valsValue := ctx.Value(cacheContext.GormCacheValuesCtx{})
+		var values []byte
+		if valsValue != nil {
+			if t, ok := valsValue.([]byte); ok {
+				values = t
+			}
+		}
+		log.Debug("gorm-cache", "values", values)
+		if len(string(values)) > 0 {
+			tx.Statement.Dest = values
 			return
 		}
-		// 存储缓存
-		ctx := tx.Statement.Context
-		log.Debug("key", ctx.Value(cacheContext.GormCacheKeyCtx{}))
+
+		// 重新生成缓存
+		key := ""
+		keyValue := ctx.Value(cacheContext.GormCacheKeyCtx{})
+		if keyValue != nil {
+			if t, ok := keyValue.(string); ok {
+				key = t
+			}
+		}
+
+		tags := []string{}
+		tagsValue := ctx.Value(cacheContext.GormCacheTagsCtx{})
+		if tagsValue != nil {
+			if t, ok := tagsValue.([]string); ok {
+				tags = t
+			}
+		}
 
 		if tx.Error != nil {
 			return
 		}
+
+		log.Debug("gorm-cache", slog.Any("dest", tx.Statement.Dest))
+
+		values, err := json.Marshal(tx.Statement.Dest)
+		if err != nil {
+			tx.AddError(err)
+			return
+		}
+
+		valueMap := map[string]interface{}{}
+		err = json.Unmarshal(values, &valueMap)
+		if err != nil {
+			tx.AddError(err)
+			return
+		}
+
+		if strings.HasSuffix(key, ":") {
+			switch valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(type) {
+			case float64:
+				key = fmt.Sprintf("%s%d", key, int64(valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(float64)))
+			case int64:
+				key = fmt.Sprintf("%s%d", key, valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(int64))
+			case string:
+				key = fmt.Sprintf("%s%s", key, valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(string))
+			}
+		}
+
+		for i, tag := range tags {
+			if strings.HasSuffix(tag, ":") {
+				switch valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(type) {
+				case float64:
+					tags[i] = fmt.Sprintf("%s%d", tag, int64(valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(float64)))
+				case int64:
+					tags[i] = fmt.Sprintf("%s%d", tag, valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(int64))
+				case string:
+					tags[i] = fmt.Sprintf("%s%s", tag, valueMap[tx.Statement.Schema.PrioritizedPrimaryField.Name].(string))
+				}
+			}
+		}
+
+		c.AddTag(tags...)
+		err = c.Set(ctx, key, tx.Statement.Dest)
+		if err != nil {
+			tx.AddError(err)
+			return
+		}
+
+		log.Debug("gorm-cache", slog.String("done", "."))
 	}
 }
