@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log/slog"
 	"testing"
 
@@ -13,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestQuery(t *testing.T) {
+func TestCreate(t *testing.T) {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	db, err := gorm.Open(sqlite.Open("./example.db"), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
@@ -34,15 +32,15 @@ func TestQuery(t *testing.T) {
 
 	db.AutoMigrate(&User{})
 
-	id := 193
-
-	ctx := cc.New(context.Background()).WithKey(fmt.Sprintf("keys.user:%d", id)).WithTags(fmt.Sprintf("tags.user:%d", id), "tags.user.all").CC()
-	info := &User{}
-	err = db.WithContext(ctx).First(&info, id).Error
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			panic(err)
-		}
+	info := &User{
+		Username: "sfk",
 	}
-	slog.Debug("query", slog.Any("info", info))
+
+	ctx := cc.New(context.Background()).WithKey("keys.user:").WithTags("tags.user:", "tags.user.all").CC()
+	err = db.WithContext(ctx).Create(&info).Error
+	if err != nil {
+		panic(err)
+	}
+	slog.Debug("create", "info", info)
+
 }

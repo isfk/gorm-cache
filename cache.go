@@ -23,8 +23,8 @@ type Config struct {
 
 func New(config *Config) *Cache {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
-		// Password: "1234567890",
+		Addr:     "127.0.0.1:6379",
+		Password: "1234567890",
 	})
 
 	c := cache.New(
@@ -72,14 +72,17 @@ func (c *Cache) Initialize(db *gorm.DB) (err error) {
 	if err != nil {
 		return err
 	}
-	err = db.Callback().Query().After("gorm:query").Register("gormcache:after_query", callbacks.AfterQuery(c.Cache))
-	if err != nil {
-		return err
-	}
+
 	// 重写 Query
 	err = db.Callback().Query().Replace("gorm:query", callbacks.Query())
 	if err != nil {
 		return err
 	}
+
+	err = db.Callback().Query().After("gorm:query").Register("gormcache:after_query", callbacks.AfterQuery(c.Cache))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

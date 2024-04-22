@@ -13,29 +13,22 @@ import (
 )
 
 func BeforeQuery(c *cache.Cache) func(tx *gorm.DB) {
-	log := slog.With("callback", "before_query")
+	slog.Debug("before_query", "start", ".")
 	return func(tx *gorm.DB) {
 		ctx := tx.Statement.Context
-		log.Debug("key", "key", ctx.Value(cacheContext.GormCacheKeyCtx{}))
 
-		key := ""
-		keyValue := ctx.Value(cacheContext.GormCacheKeyCtx{})
-		if keyValue != nil {
-			if t, ok := keyValue.(string); ok {
-				key = t
-			}
-		}
-
-		err := c.Get(ctx, key, &tx.Statement.Model)
+		key, _, _, err := GetDataFromCtx(ctx, tx.Statement)
 		if err != nil {
-			if errors.Is(err, redis.Nil) {
-				return
-			}
-			log.Error("err", err)
 			tx.AddError(err)
 			return
 		}
-		// log.Debug("gorm-cache", slog.Any("dest", tx.Statement.Dest))
+		err = c.Get(ctx, key, tx.Statement.Dest)
+		if err != nil {
+			if !errors.Is(err, redis.Nil) {
+				tx.AddError(err)
+			}
+			return
+		}
 
 		values, err := json.Marshal(tx.Statement.Dest)
 		if err != nil {
@@ -44,6 +37,6 @@ func BeforeQuery(c *cache.Cache) func(tx *gorm.DB) {
 		}
 
 		tx.Statement.Context = context.WithValue(ctx, cacheContext.GormCacheValuesCtx{}, values)
-		log.Debug("gorm-cache", "values", string(values))
+		slog.Debug("before_query", "done", ".")
 	}
 }

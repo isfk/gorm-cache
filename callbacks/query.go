@@ -9,7 +9,7 @@ import (
 )
 
 func Query() func(tx *gorm.DB) {
-	log := slog.With("callback", "query")
+	slog.Debug("query", "start", ".")
 	return func(tx *gorm.DB) {
 		ctx := tx.Statement.Context
 		valsValue := ctx.Value(cacheContext.GormCacheValuesCtx{})
@@ -19,13 +19,12 @@ func Query() func(tx *gorm.DB) {
 				values = t
 			}
 		}
-		log.Debug("gorm-cache", "values", values)
-		if len(string(values)) > 0 {
+		if values != nil {
 			tx.Statement.Dest = values
 			return
 		}
-
-		log.Debug("gorm-cache", "msg", "nocache")
+		slog.Debug("query", "msg", "nocache")
 		callbacks.Query(tx)
+		slog.Debug("query", "done", ".")
 	}
 }
