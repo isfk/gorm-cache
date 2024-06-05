@@ -18,9 +18,10 @@ type Cache struct {
 }
 
 type Config struct {
-	Prefix    string
-	RedisAddr string
-	RedisPass string
+	Prefix       string
+	RedisAddr    string
+	RedisPass    string
+	RedisExpired time.Duration // minutes
 }
 
 func New(config *Config) *Cache {
@@ -33,7 +34,7 @@ func New(config *Config) *Cache {
 		context.Background(),
 		rdb,
 		cache.WithPrefix(config.Prefix),
-		cache.WithExpired(600*time.Second),
+		cache.WithExpired(config.RedisExpired*time.Minute),
 	)
 
 	return &Cache{
