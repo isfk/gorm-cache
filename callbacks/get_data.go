@@ -46,16 +46,18 @@ func GetDataFromCtx(ctx context.Context, stat *gorm.Statement) (key string, tags
 		}
 	}
 
+	pf := strings.ToLower(stat.Schema.PrioritizedPrimaryField.Name)
+
 	if strings.HasSuffix(key, ":") {
-		key = getKeyFromMap(key, valueMap, stat.Schema.PrioritizedPrimaryField.Name)
+		key = getKeyFromMap(key, valueMap, pf)
 	}
 	for i, tag := range tags {
 		if strings.HasSuffix(tag, ":") {
-			tags[i] = getKeyFromMap(tag, valueMap, stat.Schema.PrioritizedPrimaryField.Name)
+			tags[i] = getKeyFromMap(tag, valueMap, pf)
 		}
 	}
 
-	if !NotEmpty(valueMap, stat.Schema.PrioritizedPrimaryField.Name) {
+	if !NotEmpty(valueMap, pf) {
 		valueMap = nil
 	}
 
