@@ -18,19 +18,21 @@ type Cache struct {
 }
 
 type Config struct {
-	Prefix string
+	Prefix    string
+	RedisAddr string
+	RedisPass string
 }
 
 func New(config *Config) *Cache {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "1234567890",
+		Addr:     config.RedisAddr,
+		Password: config.RedisPass,
 	})
 
 	c := cache.New(
 		context.Background(),
 		rdb,
-		cache.WithPrefix("test"),
+		cache.WithPrefix(config.Prefix),
 		cache.WithExpired(600*time.Second),
 	)
 

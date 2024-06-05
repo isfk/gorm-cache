@@ -19,7 +19,11 @@ func main() {
 		panic(err)
 	}
 
-	cache := cache.New(&cache.Config{Prefix: "gorm-cache-example"})
+	cache := cache.New(&cache.Config{
+		Prefix:    "gorm-cache-example",
+		RedisAddr: "127.0.0.1:6379",
+		RedisPass: "1234567890",
+	})
 	db.Use(cache)
 	db = db.Debug()
 
