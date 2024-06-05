@@ -1,14 +1,11 @@
 package callbacks
 
 import (
-	"log/slog"
-
 	"github.com/isfk/go-cache/v3"
 	"gorm.io/gorm"
 )
 
 func AfterQuery(c *cache.Cache) func(tx *gorm.DB) {
-	slog.Debug("after_query", "start", ".")
 	return func(tx *gorm.DB) {
 		ctx := tx.Statement.Context
 
@@ -18,7 +15,6 @@ func AfterQuery(c *cache.Cache) func(tx *gorm.DB) {
 			return
 		}
 
-		slog.Debug("after_query", "valueMap", valueMap)
 		if valueMap == nil {
 			return
 		}
@@ -29,6 +25,5 @@ func AfterQuery(c *cache.Cache) func(tx *gorm.DB) {
 			tx.AddError(err)
 			return
 		}
-		slog.Debug("after_query", "done", ".")
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 
 	"github.com/isfk/go-cache/v3"
 	cacheContext "github.com/isfk/gorm-cache/context"
@@ -13,7 +12,6 @@ import (
 )
 
 func BeforeQuery(c *cache.Cache) func(tx *gorm.DB) {
-	slog.Debug("before_query", "start", ".")
 	return func(tx *gorm.DB) {
 		ctx := tx.Statement.Context
 
@@ -37,6 +35,5 @@ func BeforeQuery(c *cache.Cache) func(tx *gorm.DB) {
 		}
 
 		tx.Statement.Context = context.WithValue(ctx, cacheContext.GormCacheValuesCtx{}, values)
-		slog.Debug("before_query", "done", ".")
 	}
 }

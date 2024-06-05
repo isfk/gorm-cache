@@ -1,14 +1,11 @@
 package callbacks
 
 import (
-	"log/slog"
-
 	"github.com/isfk/go-cache/v3"
 	"gorm.io/gorm"
 )
 
 func AfterDelete(c *cache.Cache) func(tx *gorm.DB) {
-	slog.Debug("after_delete", "start", ".")
 	return func(tx *gorm.DB) {
 		ctx := tx.Statement.Context
 
@@ -24,6 +21,5 @@ func AfterDelete(c *cache.Cache) func(tx *gorm.DB) {
 			tx.AddError(err)
 			return
 		}
-		slog.Debug("after_delete", "done", ".")
 	}
 }
