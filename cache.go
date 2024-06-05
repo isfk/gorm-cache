@@ -34,7 +34,7 @@ func New(config *Config) *Cache {
 		context.Background(),
 		rdb,
 		cache.WithPrefix(config.Prefix),
-		cache.WithExpired(config.RedisExpired*time.Minute),
+		cache.WithExpired(config.RedisExpired),
 	)
 
 	return &Cache{
