@@ -18,6 +18,10 @@ func GetDataFromCtx(ctx context.Context, stat *gorm.Statement) (key string, tags
 		}
 	}
 
+	if stat.Selects != nil {
+		key += ".selects:" + Md5(strings.Join(stat.Selects, "_"))
+	}
+
 	tagsValue := ctx.Value(cacheContext.GormCacheTagsCtx{})
 	if tagsValue != nil {
 		if t, ok := tagsValue.([]string); ok {
