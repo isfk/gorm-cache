@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/isfk/go-cache/v3 v3.0.5
-	github.com/redis/go-redis/v9 v9.5.1
+	github.com/redis/go-redis/v9 v9.5.5
 	gorm.io/driver/sqlite v1.5.5
 	gorm.io/gorm v1.25.9
 )
